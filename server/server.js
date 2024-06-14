@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const verifyAdminToken = require('./middleware'); // Middleware'i dahil edin
 const verifyToken = require('./verifyToken');
 
-
+require('dotenv').config(); // Environment variables'ı yükle
 
 // Environment variables
 const PORT = process.env.PORT || 4000;
@@ -14,11 +14,7 @@ const SECRET_KEY = process.env.SECRET_KEY || 'your_secret_key';
 
 // PostgreSQL connection
 const pool = new Pool({
-  user: 'trexoinnovation',
-  host: 'localhost',
-  database: 'anket_sitesi',
-  password: '',
-  port: 5432,
+  connectionString: process.env.POSTGRES_URL,
 });
 
 const app = express();
@@ -65,36 +61,6 @@ app.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign({ id: user.rows[0].id }, SECRET_KEY, {
-      expiresIn: '1h',
-    });
-    res.status(200).json({ token });
-  } catch (error) {
-    console.error("Giriş hatası:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Admin Login route
-app.post('/admin/login', async (req, res) => {
-  const { username, password } = req.body;
-
-  try {
-    const user = await pool.query(
-      'SELECT * FROM users WHERE username = $1 AND is_admin = true',
-      [username]
-    );
-
-    if (user.rows.length === 0) {
-      return res.status(400).json({ error: 'Admin kullanıcı bulunamadı' });
-    }
-
-    const validPassword = await bcrypt.compare(password, user.rows[0].password);
-
-    if (!validPassword) {
-      return res.status(400).json({ error: 'Geçersiz şifre' });
-    }
-
-    const token = jwt.sign({ id: user.rows[0].id, isAdmin: true }, SECRET_KEY, {
       expiresIn: '1h',
     });
     res.status(200).json({ token });
