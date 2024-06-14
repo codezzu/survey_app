@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 
+// PostgreSQL connection
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
 });
 
-export async function GET(req: NextRequest) {
+// Anket Listeleme route
+export async function GET(request: NextRequest) {
   try {
     const surveys = await pool.query(`
       SELECT s.id, s.title, s.created_at, json_agg(json_build_object('id', so.id, 'option_text', so.option_text, 'votes', coalesce(v.votes, 0))) as options
@@ -19,9 +21,11 @@ export async function GET(req: NextRequest) {
       GROUP BY s.id
       ORDER BY s.created_at DESC
     `);
-    return NextResponse.json(surveys.rows);
-  } catch (error: any) {
-    console.error("Anket listeleme hatası:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(surveys.rows, { status: 200 });
+  } catch (error) {
+    const err = error as Error;
+    console.error("Anket listeleme hatası:", err.message);
+    console.error("Stack Trace:", err.stack);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

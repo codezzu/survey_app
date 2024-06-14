@@ -29,15 +29,22 @@ export default function SurveyDetailPage() {
 
   useEffect(() => {
     const fetchSurvey = async () => {
-      const response = await fetch(`/api/surveys/${id}`);
-      const data = await response.json();
-      if (response.ok) {
-        setSurvey(data);
-        const initialVoteCounts = data.options.reduce((acc: { [key: number]: number }, option: SurveyOption) => {
-          acc[option.id] = option.votes;
-          return acc;
-        }, {});
-        setVoteCounts(initialVoteCounts);
+      try {
+        const response = await fetch(`/api/surveys/${id}`);
+        const data = await response.json();
+        if (response.ok) {
+          setSurvey(data);
+          const initialVoteCounts = data.options.reduce((acc: { [key: number]: number }, option: SurveyOption) => {
+            acc[option.id] = option.votes;
+            return acc;
+          }, {});
+          setVoteCounts(initialVoteCounts);
+        } else {
+          setMessage(`Hata: ${data.error || 'Anket yüklenemedi.'}`);
+        }
+      } catch (error: any) {
+        console.error("Fetch hatası:", error);
+        setMessage(`Hata: ${error.message}`);
       }
     };
 
