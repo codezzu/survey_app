@@ -18,18 +18,31 @@ interface Survey {
 
 export default function HomePage() {
   const [surveys, setSurveys] = useState<Survey[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSurveys = async () => {
-      const response = await fetch('/api/surveys');
-      const data = await response.json();
-      if (response.ok) {
-        setSurveys(data);
+      try {
+        const response = await fetch('/api/surveys');
+        const data = await response.json();
+        if (response.ok) {
+          setSurveys(data);
+        } else {
+          console.error("Hata:", data.error);
+        }
+      } catch (error) {
+        console.error("Fetch hatası:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchSurveys();
   }, []);
+
+  if (loading) {
+    return <div>Yükleniyor...</div>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
@@ -49,4 +62,3 @@ export default function HomePage() {
     </div>
   );
 }
-
