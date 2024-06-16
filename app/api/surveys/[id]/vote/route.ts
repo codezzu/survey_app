@@ -8,22 +8,18 @@ const pool = new Pool({
 });
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params;
+  console.log(`Voting on survey with id: ${id}`);
+
   try {
-    const { id } = params;
     const { optionId } = await request.json();
-    const userToken = request.headers.get('authorization')?.split(' ')[1];
+    const userToken = request.headers.get('Authorization')?.split(' ')[1];
 
     if (!userToken) {
       return NextResponse.json({ error: 'Token gerekli' }, { status: 403 });
     }
 
-    // SECRET_KEY değişkeninin tanımlı olduğundan emin olun
-    const secretKey = process.env.SECRET_KEY;
-    if (!secretKey) {
-      throw new Error('SECRET_KEY environment variable is not defined');
-    }
-
-    const decodedToken = jwt.verify(userToken, secretKey) as { id: number };
+    const decodedToken = jwt.verify(userToken, process.env.SECRET_KEY as string) as { id: number };
     const userId = decodedToken.id;
 
     const voteResult = await pool.query(
@@ -31,14 +27,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       [id, optionId, userId]
     );
 
-    if (voteResult.rowCount === 0) {
-      return NextResponse.json({ error: 'Oy kullanılamadı' }, { status: 400 });
-    }
-
-    return NextResponse.json({ message: 'Oy başarıyla kullanıldı' }, { status: 201 });
+    return NextResponse.json(voteResult.rows[0], { status: 201 });
   } catch (error) {
     const err = error as Error;
-    console.error("Oy kullanma hatası:", err.message);
+    console.error("Oy verme hatası:", err.message);
     console.error("Stack Trace:", err.stack);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
