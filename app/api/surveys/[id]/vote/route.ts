@@ -17,8 +17,14 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: 'Token gerekli' }, { status: 403 });
     }
 
-    const decodedToken = jwt.verify(userToken, process.env.SECRET_KEY);
-    const userId = (decodedToken as { id: number }).id;
+    // SECRET_KEY değişkeninin tanımlı olduğundan emin olun
+    const secretKey = process.env.SECRET_KEY;
+    if (!secretKey) {
+      throw new Error('SECRET_KEY environment variable is not defined');
+    }
+
+    const decodedToken = jwt.verify(userToken, secretKey) as { id: number };
+    const userId = decodedToken.id;
 
     const voteResult = await pool.query(
       'INSERT INTO votes (survey_id, option_id, user_id) VALUES ($1, $2, $3) RETURNING *',
