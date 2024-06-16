@@ -216,7 +216,7 @@ app.get('/admin/dashboard', verifyAdminToken, (req, res) => {
   res.json({ message: 'Admin paneline hoş geldiniz!' });
 });
 
-// Start serverr
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
